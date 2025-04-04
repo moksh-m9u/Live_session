@@ -3,31 +3,36 @@
 # Setup Instructions
 Follow these steps to set up Doctor AI on your device:
 
-1. Clone the Repository
-    Clone the project from GitHub to your local machine:
+## 1. Clone the Repository
+Clone the project from GitHub to your local machine:
 
-    git clone https://github.com/moksh-m9u/Live_session.git
-    cd DoctorAI
+```bash
+git clone https://github.com/moksh-m9u/Live_session.git
+cd DoctorAI
+```
+## 2. install requirements
 
-2. Install Python Dependencies
-    Install the required Python packages listed in requirements.txt:
-    
-3. create a file in the main directory name .env
+Install the required Python packages listed in requirements.txt:
+```bash
+pip install -r requirements.txt
+```
 
-    COHERE_API_KEY= 
-    Username=
-    Assistantname=DocBot
-    GroqAPIKey=
-    InputLanguage=en
-    Assistantvoice=en-IE-EmilyNeural
-    alternate_good_voice=en-CA-LiamNeural
-    
-    after creating this .env file generate api keys from cohere and groq and enter in the .env file
-    Save the .env file in the DoctorAI/ directory.
+## 3. Create a File in the Main Directory Named .env
+
+COHERE_API_KEY= 
+Username=
+Assistantname=DocBot
+GroqAPIKey=
+InputLanguage=en
+Assistantvoice=en-IE-EmilyNeural
+alternate_good_voice=en-CA-LiamNeural
+ <br />
+After creating this .env file, generate API keys from Cohere and Groq, and enter them in the .env file.
+Save the .env file in the DoctorAI/ directory.
 
 4. Running the Application
-    Start the Application:
-    Run the main script:
-    
-    python main.py
-    
+Start the application by running:
+
+```bash
+python main.py
+```

@@ -8,3 +8,4 @@ mtranslate
 pygame
 edge-tts
 PyQt5
+google-speech

@@ -1,9 +1,12 @@
 import cohere
 from rich import print
 import time
+import os
+from dotenv import dotenv_values
 
-co = cohere.ClientV2("1t6dVGVJBcDYPn3ai4brm5G5K7aFWvxuBZ9M0CVG")
-
+# Load environment variables
+env_values = dotenv_values(".env")
+co= env_values.get("cohere_api_key")
 preamble = """
 You are a Decision-Making Model for an AI Doctor. Decide whether a query is a symptom description or requires image analysis.
 -> Respond with 'symptom (query)' for text/voice-based symptom descriptions (e.g., 'I have a cough' -> 'symptom I have a cough').

@@ -1,102 +1,44 @@
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-from webdriver_manager.chrome import ChromeDriverManager
-from dotenv import dotenv_values
+import logging
 import os
-import mtranslate as mt
+from groq import Groq
+from dotenv import dotenv_values
 
-env_vars = dotenv_values(".env")
-InputLanguage = env_vars.get("InputLanguage")
+# Load environment variables
+env_values = dotenv_values(".env")
+GroqAPIKey = env_values.get("GroqAPIKey")
 
-HtmlCode = '''<!DOCTYPE html>
-<html lang="en">
-<head>
-    <title>Speech Recognition</title>
-</head>
-<body>
-    <button id="start" onclick="startRecognition()">Start Recognition</button>
-    <button id="end" onclick="stopRecognition()">Stop Recognition</button>
-    <p id="output"></p>
-    <script>
-        const output = document.getElementById('output');
-        let recognition;
+# Logging setup
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 
-        function startRecognition() {
-            recognition = new webkitSpeechRecognition() || new SpeechRecognition();
-            recognition.lang = '';
-            recognition.continuous = true;
+# Directory setup
+TempDirPath = "Data"
+if not os.path.exists(TempDirPath):
+    os.makedirs(TempDirPath)
 
-            recognition.onresult = function(event) {
-                const transcript = event.results[event.results.length - 1][0].transcript;
-                output.textContent += transcript;
-            };
+def transcribe_with_groq(stt_model, audio_filepath, api_key=GroqAPIKey):
+    """Transcribe the audio file using Groq's STT model."""
+    try:
+        client = Groq(api_key=api_key)
+        with open(audio_filepath, "rb") as audio_file:
+            transcription = client.audio.transcriptions.create(
+                model=stt_model,
+                file=audio_file,
+                language="en"
+            )
+        logging.info(f"Transcription successful: {transcription.text}")
+        return transcription.text
+    except Exception as e:
+        logging.error(f"Error during transcription: {e}")
+        return f"Error during transcription: {e}"
 
-            recognition.onend = function() {
-                recognition.start();
-            };
-            recognition.start();
-        }
-
-        function stopRecognition() {
-            recognition.stop();
-            output.innerHTML = "";
-        }
-    </script>
-</body>
-</html>'''
-
-HtmlCode = HtmlCode.replace("recognition.lang='';", f"recognition.lang='{InputLanguage}';")
-with open(r"Data\Voice.html", "w") as f:
-    f.write(HtmlCode)
-
-current_dir = os.getcwd()
-Link = f"file:///{current_dir}/Data/Voice.html"
-chrome_options = Options()
-user_agent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/89.0.142.86 Safari/537.36"
-chrome_options.add_argument(f"user-agent={user_agent}")
-chrome_options.add_argument("--use-fake-ui-for-media-stream")
-chrome_options.add_argument("--use-fake-device-for-media-stream")
-chrome_options.add_argument("--headless-new")
-service = Service(ChromeDriverManager().install())
-driver = webdriver.Chrome(service=service, options=chrome_options)
-
-TempDirPath = rf"{current_dir}/Frontend/Files"
-
-def SetAssistantStatus(Status):
-    with open(rf'{TempDirPath}/Status.data', "w", encoding='utf-8') as file:
-        file.write(Status)
-
-def QueryModifier(Query):
-    new_query = Query.lower().strip()
-    query_words = new_query.split()
-    question_words = ["how", "what", "where", "when", "who", "why", "which", "can you", "what's", "where's", "how's"]
-    if any(word + " " in new_query for word in question_words):
-        new_query = new_query[:-1] + "?" if query_words[-1][-1] in [".", "?", "!"] else new_query + "?"
-    else:
-        new_query = new_query[:-1] + "." if query_words[-1][-1] in [".", "?", "!"] else new_query + "."
-    return new_query.capitalize()
-
-def UniversalTranslator(Text):
-    return mt.translate(Text, "en", "auto").capitalize()
-
-def SpeechRecognition():
-    driver.get(Link)
-    driver.find_element(by=By.ID, value="start").click()
-    while True:
-        try:
-            Text = driver.find_element(by=By.ID, value="output").text
-            if Text:
-                driver.find_element(by=By.ID, value="end").click()
-                if "en" in InputLanguage.lower():
-                    return QueryModifier(Text)
-                else:
-                    SetAssistantStatus("Translating...")
-                    return QueryModifier(UniversalTranslator(Text))
-        except Exception:
-            pass
+def SpeechRecognition(audio_filepath):
+    """Convert speech to text using Groq STT."""
+    if not os.path.exists(audio_filepath):
+        logging.error(f"Audio file not found at {audio_filepath}")
+        return "Sorry, audio file not found."
+    
+    text = transcribe_with_groq("whisper-large-v3", audio_filepath)
+    return text
 
 if __name__ == "__main__":
-    while True:
-        print(SpeechRecognition())
+    print(SpeechRecognition("Data/patient_voice_test.mp3"))
